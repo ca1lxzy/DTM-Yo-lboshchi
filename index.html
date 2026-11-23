@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DTM Yo'lboshchi</title>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--line:#334155;--txt:#e2e8f0;--mut:#94a3b8;--pri:#3b82f6;--ok:#22c55e;--bad:#ef4444;--warn:#f59e0b}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--txt);line-height:1.5}
+header{padding:24px 16px;text-align:center;background:linear-gradient(135deg,#1d4ed8,#7c3aed)}
+header h1{margin:0;font-size:1.8rem}
+header p{margin:6px 0 0;opacity:.9}
+nav{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:12px;background:#0b1220;position:sticky;top:0;z-index:5}
+nav button{background:var(--card);color:var(--txt);border:1px solid var(--line);padding:10px 16px;border-radius:10px;cursor:pointer;font-size:.95rem}
+nav button.active{background:var(--pri);border-color:var(--pri)}
+main{max-width:900px;margin:0 auto;padding:16px}
+section{display:none}
+section.active{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+.card h2{margin-top:0;font-size:1.15rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+label{display:block;font-size:.85rem;color:var(--mut);margin-bottom:4px}
+input,select{width:100%;padding:10px;border-radius:8px;border:1px solid var(--line);background:#0f172a;color:var(--txt);font-size:1rem}
+button.act{background:var(--pri);color:#fff;border:0;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:1rem;margin-top:12px}
+button.act:hover{filter:brightness(1.1)}
+button.del{background:transparent;color:var(--bad);border:0;cursor:pointer;font-size:1rem}
+.big{font-size:2.6rem;font-weight:700}
+.row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border:0}
+.bar{height:10px;background:#0f172a;border-radius:6px;overflow:hidden;margin-top:4px}
+.bar>div{height:100%;background:var(--pri)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}.mut{color:var(--mut)}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--line)}
+canvas{width:100%;height:260px;background:#0f172a;border-radius:10px}
+.tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.78rem;background:#0f172a;border:1px solid var(--line)}
+footer{text-align:center;color:var(--mut);padding:20px;font-size:.85rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎯 DTM Yo'lboshchi</h1>
+  <p>Ballingni hisobla, maqsadingni belgila, qaysi fanga qancha vaqt ajratishni bil</p>
+</header>
+<nav id="nav">
+  <button data-tab="calc" class="active">Ball hisoblagich</button>
+  <button data-tab="goal">Maqsad va reja</button>
+  <button data-tab="log">Mock jurnal</button>
+  <button data-tab="topics">Zaif mavzular</button>
+</nav>
+<main>
+
+<section id="calc" class="active">
+  <div class="card">
+    <h2>Fanlar</h2>
+    <div class="grid">
+      <div><label>1-asosiy fan nomi</label><select id="f1name"></select></div>
+      <div><label>2-asosiy fan nomi</label><select id="f2name"></select></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>To'g'ri javoblar soni</h2>
+    <div class="grid" id="calcInputs"></div>
+    <button class="act" id="calcBtn">Hisoblash</button>
+  </div>
+  <div class="card" id="calcResult" style="display:none"></div>
+</section>
+
+<section id="goal">
+  <div class="card">
+    <h2>Maqsadim</h2>
+    <div class="grid">
+      <div><label>Universitet / yo'nalish</label><input id="uni" placeholder="Masalan: TATU, Dasturiy injiniring"></div>
+      <div><label>O'tish bali (o'tgan yilgi, 189 dan)</label><input id="goalScore" type="number" min="0" max="189" step="0.1"></div>
+      <div><label>Imtihon sanasi</label><input id="examDate" type="date"></div>
+      <div><label>Kuniga necha soat o'qiy olaman</label><input id="hours" type="number" min="1" max="14" step="0.5" value="4"></div>
+    </div>
+    <button class="act" id="goalBtn">Saqlash va reja tuzish</button>
+  </div>
+  <div class="card" id="planCard" style="display:none"></div>
+</section>
+
+<section id="log">
+  <div class="card">
+    <h2>Yangi mock test natijasi</h2>
+    <div class="grid" id="logInputs"></div>
+    <div class="grid" style="margin-top:12px"><div><label>Sana</label><input id="logDate" type="date"></div></div>
+    <button class="act" id="logBtn">Qo'shish</button>
+  </div>
+  <div class="card"><h2>Rivojlanish grafigi</h2><canvas id="chart" width="800" height="260"></canvas><p id="forecast" class="mut"></p></div>
+  <div class="card"><h2>Natijalar tarixi</h2><div id="logTable"></div></div>
+</section>
+
+<section id="topics">
+  <div class="card">
+    <h2>Zaif mavzu qo'shish</h2>
+    <div class="grid">
+      <div><label>Mavzu</label><input id="tName" placeholder="Masalan: Logarifmik tenglamalar"></div>
+      <div><label>Fan</label><select id="tSubj"></select></div>
+      <div><label>Qanchalik bilaman (1 = umuman, 5 = yaxshi)</label><input id="tLevel" type="number" min="1" max="5" value="2"></div>
+    </div>
+    <button class="act" id="tBtn">Qo'shish</button>
+  </div>
+  <div class="card"><h2>O'qish ustuvorligi</h2><div id="topicList"></div></div>
+</section>
+
+</main>
+<footer>Ma'lumotlar faqat sizning brauzeringizda saqlanadi (localStorage). Al-Xorazmiy Vorislari loyihasi.</footer>
+
+<script>
+// DTM tuzilmasi: 90 savol, jami 189 ball
+const FANLAR = ["Matematika","Fizika","Kimyo","Biologiya","Ona tili va adabiyot","Tarix","Ingliz tili","Geografiya","Huquq","Rus tili"];
+const BLOK = [
+  {key:"f1",  label:"1-asosiy fan",        n:30, w:3.1},
+  {key:"f2",  label:"2-asosiy fan",        n:30, w:2.1},
+  {key:"ona", label:"Ona tili (majburiy)", n:10, w:1.1},
+  {key:"mat", label:"Matematika (majburiy)",n:10, w:1.1},
+  {key:"tar", label:"O'zbekiston tarixi (majburiy)", n:10, w:1.1}
+];
+const MAX_TOTAL = BLOK.reduce((s,b)=>s+b.n*b.w,0);
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = x => (Math.round(x*10)/10).toFixed(1);
+
+let S = JSON.parse(localStorage.getItem("dtm_state")||"null") || {
+  f1name:"Matematika", f2name:"Fizika",
+  goal:{uni:"",score:"",date:"",hours:4},
+  tests:[], topics:[]
+};
+const save = () => localStorage.setItem("dtm_state", JSON.stringify(S));
+
+function blokName(b){
+  if(b.key==="f1") return S.f1name+" (1-fan)";
+  if(b.key==="f2") return S.f2name+" (2-fan)";
+  return b.label;
+}
+function calcTotal(v){ return BLOK.reduce((s,b)=>s+(v[b.key]||0)*b.w,0); }
+
+// ---------- Tablar ----------
+$("nav").addEventListener("click",e=>{
+  const t=e.target.dataset.tab; if(!t) return;
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b===e.target));
+  document.querySelectorAll("section").forEach(s=>s.classList.toggle("active",s.id===t));
+  if(t==="log") drawChart();
+  if(t==="goal") renderPlan();
+  if(t==="topics") renderTopics();
+});
+
+// ---------- Fan tanlash ----------
+function fillSelect(sel,val){ sel.innerHTML=FANLAR.map(f=>`<option ${f===val?"selected":""}>${f}</option>`).join(""); }
+fillSelect($("f1name"),S.f1name); fillSelect($("f2name"),S.f2name); fillSelect($("tSubj"),S.f1name);
+function refreshSubjectSelects(){
+  const opts=[S.f1name,S.f2name,"Ona tili","Matematika (majburiy)","Tarix"];
+  $("tSubj").innerHTML=[...new Set(opts)].map(o=>`<option>${esc(o)}</option>`).join("");
+}
+refreshSubjectSelects();
+["f1name","f2name"].forEach(id=>$(id).addEventListener("change",()=>{
+  S.f1name=$("f1name").value; S.f2name=$("f2name").value; save();
+  buildInputs("calcInputs","c_"); buildInputs("logInputs","l_"); refreshSubjectSelects();
+}));
+
+function buildInputs(container,prefix){
+  $(container).innerHTML=BLOK.map(b=>`<div><label>${esc(blokName(b))} (0–${b.n})</label>
+  <input type="number" id="${prefix}${b.key}" min="0" max="${b.n}" value="0"></div>`).join("");
+}
+buildInputs("calcInputs","c_"); buildInputs("logInputs","l_");
+
+function readInputs(prefix){
+  const v={};
+  for(const b of BLOK){
+    let x=parseInt($(prefix+b.key).value,10);
+    if(isNaN(x)||x<0) x=0; if(x>b.n) x=b.n; v[b.key]=x;
+  }
+  return v;
+}
+
+// ---------- Ball hisoblagich ----------
+$("calcBtn").addEventListener("click",()=>{
+  const v=readInputs("c_"), total=calcTotal(v);
+  const rows=BLOK.map(b=>{
+    const got=v[b.key]*b.w, max=b.n*b.w, pct=got/max*100;
+    return `<div class="row"><div style="flex:1"><b>${esc(blokName(b))}</b> <span class="mut">${v[b.key]}/${b.n} · ${b.w} ball/savol</span>
+    <div class="bar"><div style="width:${pct}%"></div></div></div><div><b>${fmt(got)}</b> / ${fmt(max)}</div></div>`;
+  }).join("");
+  const g=parseFloat(S.goal.score);
+  let cmp="";
+  if(!isNaN(g)){
+    const d=total-g;
+    cmp=`<p class="${d>=0?"ok":"bad"}">${d>=0?"✅ Maqsad balidan "+fmt(d)+" ball yuqori":"❌ Maqsadgacha yana "+fmt(-d)+" ball kerak"} (${esc(S.goal.uni||"maqsad")}: ${g})</p>`;
+  }
+  $("calcResult").style.display="block";
+  $("calcResult").innerHTML=`<h2>Natija</h2><div class="big">${fmt(total)} <span class="mut" style="font-size:1.2rem">/ ${MAX_TOTAL}</span></div>${cmp}${rows}`;
+});
+
+// ---------- Maqsad va reja ----------
+function loadGoal(){
+  $("uni").value=S.goal.uni||""; $("goalScore").value=S.goal.score||"";
+  $("examDate").value=S.goal.date||""; $("hours").value=S.goal.hours||4;
+}
+loadGoal();
+$("goalBtn").addEventListener("click",()=>{
+  S.goal={uni:$("uni").value.trim(),score:$("goalScore").value,date:$("examDate").value,hours:parseFloat($("hours").value)||4};
+  save(); renderPlan();
+});
+
+function lastAvg(k=3){
+  const t=S.tests.slice(-k); if(!t.length) return null;
+  const avg={}; BLOK.forEach(b=>avg[b.key]=t.reduce((s,x)=>s+x[b.key],0)/t.length);
+  return avg;
+}
+
+function renderPlan(){
+  const card=$("planCard"); const g=parseFloat(S.goal.score);
+  if(isNaN(g)){card.style.display="none";return;}
+  card.style.display="block";
+  const avg=lastAvg();
+  let html=`<h2>Reja: ${esc(S.goal.uni||"maqsad")}</h2>`;
+  if(S.goal.date){
+    const days=Math.ceil((new Date(S.goal.date)-new Date())/86400000);
+    html+=`<p>⏳ Imtihongacha: <b class="${days<30?"warn":""}">${days>0?days+" kun":"vaqt o'tdi"}</b></p>`;
+  }
+  if(!avg){
+    html+=`<p class="mut">Reja tuzish uchun avval "Mock jurnal" bo'limiga kamida bitta test natijasini kiriting.</p>`;
+    card.innerHTML=html; return;
+  }
+  const cur=calcTotal(avg), gap=g-cur;
+  html+=`<div class="row"><span>So'nggi natijalar o'rtachasi</span><b>${fmt(cur)}</b></div>
+         <div class="row"><span>Maqsad</span><b>${g}</b></div>
+         <div class="row"><span>Farq</span><b class="${gap>0?"bad":"ok"}">${gap>0?"+"+fmt(gap)+" ball kerak":"maqsadga yetgansiz"}</b></div>`;
+  // Yo'qotilgan ballar asosida vaqt taqsimoti
+  const lost=BLOK.map(b=>({b,lost:(b.n-avg[b.key])*b.w}));
+  const totalLost=lost.reduce((s,x)=>s+x.lost,0)||1;
+  const hrs=S.goal.hours||4;
+  html+=`<h3>Kunlik ${hrs} soatni shunday taqsimlang</h3><table><tr><th>Fan</th><th>Olinmagan ball</th><th>Soat/kun</th></tr>`;
+  lost.sort((a,b)=>b.lost-a.lost).forEach(x=>{
+    html+=`<tr><td>${esc(blokName(x.b))}</td><td>${fmt(x.lost)}</td><td><b>${fmt(hrs*x.lost/totalLost)}</b></td></tr>`;
+  });
+  html+=`</table><p class="mut">Mantiq: ko'proq ball yo'qotilayotgan va bahosi baland (3.1 / 2.1) fanga ko'proq vaqt ajratiladi.</p>`;
+  if(gap>0 && S.goal.date){
+    const weeks=Math.max(1,Math.ceil((new Date(S.goal.date)-new Date())/604800000));
+    html+=`<p>📈 Maqsadga yetish uchun haftasiga o'rtacha <b>${fmt(gap/weeks)}</b> ball o'sish kerak.</p>`;
+  }
+  card.innerHTML=html;
+}
+
+// ---------- Mock jurnal ----------
+$("logDate").valueAsDate=new Date();
+$("logBtn").addEventListener("click",()=>{
+  const v=readInputs("l_"); v.date=$("logDate").value||new Date().toISOString().slice(0,10);
+  v.total=calcTotal(v);
+  S.tests.push(v); S.tests.sort((a,b)=>a.date.localeCompare(b.date));
+  save(); drawChart(); renderLog(); renderPlan();
+});
+function renderLog(){
+  if(!S.tests.length){$("logTable").innerHTML='<p class="mut">Hali natija yo\'q.</p>';return;}
+  $("logTable").innerHTML="<table><tr><th>Sana</th><th>Jami ball</th><th></th></tr>"+
+  S.tests.map((t,i)=>`<tr><td>${esc(t.date)}</td><td><b>${fmt(t.total)}</b></td><td><button class="del" data-i="${i}">✕</button></td></tr>`).join("")+"</table>";
+}
+$("logTable").addEventListener("click",e=>{
+  const i=e.target.dataset.i; if(i===undefined) return;
+  S.tests.splice(+i,1); save(); renderLog(); drawChart(); renderPlan();
+});
+
+function drawChart(){
+  renderLog();
+  const c=$("chart"), ctx=c.getContext("2d"), W=c.width, H=c.height, P=36;
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle="#334155"; ctx.fillStyle="#94a3b8"; ctx.font="12px sans-serif";
+  for(let v=0;v<=189;v+=63){
+    const y=H-P-(v/189)*(H-2*P);
+    ctx.beginPath();ctx.moveTo(P,y);ctx.lineTo(W-10,y);ctx.stroke();
+    ctx.fillText(v,4,y+4);
+  }
+  const pts=S.tests.map(t=>t.total);
+  const g=parseFloat(S.goal.score);
+  if(!isNaN(g)){
+    const y=H-P-(g/189)*(H-2*P);
+    ctx.strokeStyle="#22c55e"; ctx.setLineDash([6,4]);
+    ctx.beginPath();ctx.moveTo(P,y);ctx.lineTo(W-10,y);ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle="#22c55e"; ctx.fillText("Maqsad "+g,W-90,y-4);
+  }
+  if(pts.length){
+    const step=pts.length>1?(W-P-20)/(pts.length-1):0;
+    ctx.strokeStyle="#3b82f6"; ctx.lineWidth=3; ctx.beginPath();
+    pts.forEach((v,i)=>{const x=P+i*step,y=H-P-(v/189)*(H-2*P); i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+    ctx.stroke(); ctx.lineWidth=1;
+    pts.forEach((v,i)=>{const x=P+i*step,y=H-P-(v/189)*(H-2*P);
+      ctx.fillStyle="#3b82f6";ctx.beginPath();ctx.arc(x,y,5,0,7);ctx.fill();
+      ctx.fillStyle="#e2e8f0";ctx.fillText(fmt(v),x-10,y-10);});
+  }
+  // Prognoz: chiziqli regressiya (kun bo'yicha)
+  const f=$("forecast");
+  if(S.tests.length>=2 && S.goal.date){
+    const xs=S.tests.map(t=>new Date(t.date).getTime()/86400000), ys=pts, n=xs.length;
+    const mx=xs.reduce((a,b)=>a+b)/n, my=ys.reduce((a,b)=>a+b)/n;
+    const den=xs.reduce((s,x)=>s+(x-mx)**2,0);
+    if(den>0){
+      const k=xs.reduce((s,x,i)=>s+(x-mx)*(ys[i]-my),0)/den;
+      const pred=Math.min(189,Math.max(0,my+k*(new Date(S.goal.date).getTime()/86400000-mx)));
+      f.innerHTML=`🔮 Hozirgi sur'at bilan imtihon kuni taxminan <b>${fmt(pred)}</b> ball olasiz (haftasiga ${k*7>=0?"+":""}${fmt(k*7)} ball).`;
+      return;
+    }
+  }
+  f.textContent="Prognoz uchun kamida 2 ta test va imtihon sanasi kerak.";
+}
+
+// ---------- Zaif mavzular ----------
+$("tBtn").addEventListener("click",()=>{
+  const name=$("tName").value.trim(); if(!name) return;
+  let lv=parseInt($("tLevel").value,10); lv=Math.min(5,Math.max(1,isNaN(lv)?2:lv));
+  S.topics.push({name,subj:$("tSubj").value,level:lv,done:false});
+  $("tName").value=""; save(); renderTopics();
+});
+function renderTopics(){
+  const list=S.topics.map((t,i)=>({...t,i})).sort((a,b)=>a.done-b.done||a.level-b.level);
+  $("topicList").innerHTML=list.length?"<table><tr><th></th><th>Mavzu</th><th>Fan</th><th>Daraja</th><th></th></tr>"+
+  list.map(t=>`<tr style="${t.done?"opacity:.5;text-decoration:line-through":""}">
+  <td><input type="checkbox" data-d="${t.i}" ${t.done?"checked":""} style="width:auto"></td>
+  <td>${esc(t.name)}</td><td><span class="tag">${esc(t.subj)}</span></td>
+  <td class="${t.level<=2?"bad":t.level==3?"warn":"ok"}">${t.level}/5</td>
+  <td><button class="del" data-x="${t.i}">✕</button></td></tr>`).join("")+"</table>":'<p class="mut">Mavzu qo\'shilmagan.</p>';
+}
+$("topicList").addEventListener("click",e=>{
+  if(e.target.dataset.d!==undefined){S.topics[+e.target.dataset.d].done=e.target.checked;save();renderTopics();}
+  if(e.target.dataset.x!==undefined){S.topics.splice(+e.target.dataset.x,1);save();renderTopics();}
+});
+
+renderLog(); renderTopics(); renderPlan();
+</script>
+</body>
+</html>
